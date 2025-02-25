@@ -68,6 +68,27 @@ func GetBookById(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+func GetBookByName(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	bookName := vars["bookName"]
+	db := config.GetDB()
+	var book models.Book
+	result := db.Where("name = ?", bookName).First(&book)
+	if result.Error != nil {
+		fmt.Println("Error while fetching book:", result.Error)
+		http.Error(w, "Failed to fetch book", http.StatusInternalServerError)
+		return
+	}
+	res, err := json.Marshal(book)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
+}
+
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	updateBook := &models.Book{}
 	utils.ParseBody(r, updateBook)
