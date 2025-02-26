@@ -133,3 +133,25 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
+
+func DeleteBookByName(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	bookName := vars["bookName"]
+
+	db := config.GetDB()
+	var book models.Book
+	result := db.Where("name = ?", bookName).Delete(&book)
+	if result.Error != nil {
+		fmt.Println("Error while deleting book:", result.Error)
+		http.Error(w, "Failed to delete book", http.StatusInternalServerError)
+		return
+	}
+	if result.RowsAffected == 0 {
+		http.Error(w, "Book not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Book deleted successfully"})
+}
